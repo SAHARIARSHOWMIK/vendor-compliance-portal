@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+
+    <php>
+        <!-- Use an in-memory SQLite database for all feature tests. -->
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:2fl+Ktvkfl+Ktvkfl+Ktvkfl+Ktvkfl+Ktvkfl+I="/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="FILESYSTEM_DISK" value="local"/>
+        <!-- Compliance threshold env vars are needed by ComplianceService tests -->
+        <env name="COMPLIANCE_EXPIRY_EARLY_WARNING_DAYS" value="60"/>
+        <env name="COMPLIANCE_EXPIRY_REMINDER_DAYS" value="30"/>
+        <env name="COMPLIANCE_EXPIRY_URGENT_DAYS" value="7"/>
+    </php>
+</phpunit>
