@@ -59,9 +59,17 @@ Route::middleware('auth')->group(function () {
 
             // Admin can upload documents on behalf of a vendor
             Route::post('/vendors/{vendor}/documents/upload', [AdminDocumentController::class, 'store'])->name('vendors.documents.store');
+        });
 
-            // Reports (HTML pages)
-            Route::prefix('reports')->name('reports.')->group(function () {
+    /*
+    |----------------------------------------------------------------
+    | Reports - Super Admin + Compliance Admin + read-only Auditor
+    |----------------------------------------------------------------
+    */
+    Route::middleware('role:super_admin,compliance_admin,auditor')
+        ->prefix('admin/reports')
+        ->name('admin.reports.')
+        ->group(function () {
                 Route::get('/',                     [ReportController::class, 'index'])->name('index');
                 Route::get('/compliance-summary',   [ReportController::class, 'complianceSummary'])->name('compliance-summary');
                 Route::get('/missing-documents',    [ReportController::class, 'missingDocuments'])->name('missing-documents');
@@ -79,7 +87,6 @@ Route::middleware('auth')->group(function () {
                 Route::get('/vendor-onboarding/export',  [ReportController::class, 'exportVendorOnboarding'])->name('vendor-onboarding.export');
                 Route::get('/reviewer-workload/export',  [ReportController::class, 'exportReviewerWorkload'])->name('reviewer-workload.export');
                 Route::get('/audit-log/export',          [ReportController::class, 'exportAuditLog'])->name('audit-log.export');
-            });
         });
 
     /*
