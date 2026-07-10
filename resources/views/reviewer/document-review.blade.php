@@ -48,7 +48,7 @@
             @endif
 
             <div class="panel">
-                <div class="panel-header"><div><h2 class="panel-title">Version history</h2><p class="panel-caption">Previous evidence snapshots remain immutable and downloadable.</p></div><span class="badge-neutral">{{ $document->versions->count() + 1 }} versions</span></div>
+                <div class="panel-header"><div><h2 class="panel-title">Version History</h2><p class="panel-caption">Previous evidence snapshots remain immutable and downloadable.</p></div><span class="badge-neutral">{{ $document->versions->count() + 1 }} versions</span></div>
                 <div class="divide-y divide-slate-100">
                     <div class="flex items-center gap-4 bg-indigo-50/30 px-5 py-4"><div class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-100 text-xs font-bold text-indigo-700">v{{ $document->version_number }}</div><div class="min-w-0 flex-1"><div class="truncate text-sm font-semibold text-slate-900">{{ $document->original_filename }}</div><div class="text-xs text-slate-500">Current · {{ $document->uploaded_at?->format('d M Y H:i') }}</div></div><x-document-status-badge :status="$document->status" /></div>
                     @foreach ($document->versions as $version)
