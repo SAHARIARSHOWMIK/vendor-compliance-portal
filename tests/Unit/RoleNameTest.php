@@ -33,7 +33,10 @@ class RoleNameTest extends TestCase
 
     public function test_role_labels_are_human_readable(): void
     {
-        ->assertSame('Super Admin', RoleName::SuperAdmin->label());
-        ->assertSame('Read-only Auditor', RoleName::Auditor->label());
+        $superAdmin = RoleName::SuperAdmin;
+        $auditor = RoleName::Auditor;
+
+        $this->assertSame('Super Admin', $superAdmin->label());
+        $this->assertSame('Read-only Auditor', $auditor->label());
     }
 }
