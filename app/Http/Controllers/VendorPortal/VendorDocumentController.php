@@ -71,7 +71,7 @@ class VendorDocumentController extends Controller
      */
     public function store(UploadDocumentRequest $request, Vendor $vendor): RedirectResponse
     {
-        $this->authorize('upload', [$vendor]);
+        $this->authorize('upload', [VendorDocument::class, $vendor]);
 
         $documentType = DocumentType::findOrFail($request->document_type_id);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Document;
 
 use App\Models\DocumentType;
+use App\Models\VendorDocument;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,7 @@ class UploadDocumentRequest extends FormRequest
     public function authorize(): bool
     {
         $vendor = $this->route('vendor');
-        return $this->user()->can('upload', [$vendor]);
+        return $this->user()->can('upload', [VendorDocument::class, $vendor]);
     }
 
     public function rules(): array
