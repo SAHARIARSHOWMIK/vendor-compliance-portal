@@ -19,7 +19,7 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('Vendor Compliance Portal');
+        $response->assertSee('VendorGuard');
     }
 
     public function test_authenticated_user_is_redirected_away_from_login(): void
