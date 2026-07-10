@@ -193,9 +193,12 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create(['role' => RoleName::VendorUser]);
 
-        // No vendor linked yet - middleware lets them through to the
-        // controller, which returns 200 with the "not linked" message.
-        $this->actingAs($user)->get(route('vendor-portal.dashboard'))
+        $this->actingAs($user)
+            ->get(route('vendor-portal.dashboard'))
+            ->assertRedirect(route('vendor-portal.checklist'));
+
+        $this->actingAs($user)
+            ->get(route('vendor-portal.checklist'))
             ->assertStatus(200);
     }
 
