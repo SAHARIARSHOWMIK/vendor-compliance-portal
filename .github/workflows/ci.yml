@@ -34,7 +34,7 @@ jobs:
 
       - name: Prepare application environment
         run: |
-          cp .env.example .env
+          cp .env.sqlite.example .env
           mkdir -p bootstrap/cache
           mkdir -p storage/app/private
           mkdir -p storage/framework/cache/data
