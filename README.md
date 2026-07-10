@@ -131,7 +131,7 @@ The platform includes reports for compliance summary, missing evidence, expiry, 
 
 | Layer | Technology |
 |---|---|
-| Application | Laravel 11, PHP 8.2+ |
+| Application | Laravel 12, PHP 8.2+ |
 | Interface | Blade, Tailwind CSS, Vite, Axios |
 | Authorization | Laravel middleware, policies, five-role RBAC |
 | Database | SQLite for local setup; MySQL 8.4 in Docker |
