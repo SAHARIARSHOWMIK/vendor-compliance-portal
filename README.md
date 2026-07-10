@@ -1,239 +1,355 @@
-# Vendor Compliance Portal
+# VendorGuard — Vendor Compliance & Document Approval Portal
 
-[![CI](https://github.com/SAHARIARSHOWMIK/vendor-compliance-portal/actions/workflows/ci.yml/badge.svg)](https://github.com/SAHARIARSHOWMIK/vendor-compliance-portal/actions/workflows/ci.yml)
-[![PHP](https://img.shields.io/badge/PHP-8.3-8892bf.svg)](https://php.net)
-[![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20.svg)](https://laravel.com)
-[![Tests](https://img.shields.io/badge/tests-129%20passing-brightgreen.svg)](#testing)
+A production-style Laravel platform for vendor onboarding, compliance evidence collection, human document review, expiry monitoring, risk-based prioritization, reporting, notifications, and immutable audit history.
 
-A full-stack Laravel 11 application for managing vendor onboarding, compliance document collection, review workflows, and expiry monitoring. Built as a portfolio project demonstrating enterprise Laravel patterns.
+> VendorGuard centralizes the full assurance lifecycle: **vendor invited → evidence uploaded → reviewer decision → compliance recalculated → remediation tracked → reports and audit records retained**.
 
----
+## Why this project exists
 
-## Portfolio Highlights
+Vendor assurance is often managed through email threads, shared folders, and spreadsheets. That creates unclear ownership, inconsistent evidence decisions, missed expiry dates, and weak auditability. VendorGuard turns those fragmented activities into a controlled, role-aware workflow.
 
-This project is designed as a full-stack Laravel portfolio system, not a simple CRUD demo. It demonstrates role-based access control, private document storage, approval workflows, compliance scoring, scheduled expiry checks, CSV reporting, email/in-app notifications, and immutable audit logging.
+## Product capabilities
 
-## Features
+- Vendor onboarding and lifecycle management
+- Category-specific required-document checklists
+- Private evidence storage with authenticated downloads
+- Document replacement and version history
+- Risk levels and compliance scoring
+- Human review queue with approve, reject, correction, information-request, and escalation outcomes
+- Missing, rejected, under-review, expired, and expiring evidence detection
+- Vendor remediation workflow
+- Role-based operational dashboards
+- In-app notification center
+- CSV reporting and audit exports
+- Scheduled expiry monitoring
+- Append-only audit events
+- Dockerized web, worker, scheduler, and MySQL services
+- CI checks for PHP syntax, Laravel tests, frontend builds, and dependency auditing
 
-- **5-role RBAC** — Super Admin, Compliance Admin, Reviewer, Vendor User, Auditor with middleware-enforced route groups and Policy-layer action gates
-- **12-status vendor lifecycle** — draft → invited → registered → documents_pending → under_review → correction_required → partially_approved → fully_compliant → expiring_soon → non_compliant → suspended → archived
-- **10-status document lifecycle** — with full version history (reupload never overwrites; old versions are snapshotted to `document_versions`)
-- **Private file storage** — all vendor documents stored on a private disk, served only through authenticated controller actions, never via public URLs
-- **Compliance engine** — deterministic score (0–100) and 8-status compliance derivation; recalculates on every document upload, review decision, and nightly expiry check
-- **Review workflow** — 5 decision types (approve / reject / correction\_requested / need\_more\_info / escalate); append-only review history
-- **Nightly expiry monitoring** — `php artisan compliance:check-expiry` with `--dry-run` support, scheduled via `routes/console.php`
-- **7 report types** — compliance summary, missing documents, expiring documents, rejected documents, vendor onboarding, reviewer workload, audit trail — each with CSV export
-- **Immutable audit log** — every significant system action recorded with actor/vendor snapshots that survive record deletion
-- **Email notifications** — document review decisions and expiry warnings (uses `MAIL_MAILER=log` in development)
+## User roles
 
----
+| Role | Primary responsibilities |
+|---|---|
+| Super Administrator | Platform-wide administration, vendor oversight, reporting, review access, and audit access |
+| Compliance Administrator | Vendor onboarding, evidence requirements, reviewer assignment, remediation, and reports |
+| Reviewer | Prioritized review queue, evidence inspection, and human review decisions |
+| Vendor User | Vendor-scoped checklist, uploads, replacements, and decision feedback |
+| Auditor | Read-only vendor assurance records, compliance evidence, and audit-log exports |
 
-## Architecture
+## Compliance workflow
 
+```text
+Vendor creation
+    ↓
+Category requirements assigned
+    ↓
+Vendor invitation and account acceptance
+    ↓
+Private evidence upload and version creation
+    ↓
+Risk-prioritized human review queue
+    ↓
+Approve / correction / reject / request information / escalate
+    ↓
+Compliance score and lifecycle status recalculated
+    ↓
+Expiry monitoring, notifications, reports, and audit trail
 ```
+
+## Screenshots
+
+### Compliance command center
+
+![Compliance command center](docs/screenshots/dashboard.png)
+
+### Vendor portfolio
+
+![Vendor portfolio](docs/screenshots/vendors.png)
+
+### Risk-prioritized review queue
+
+![Review queue](docs/screenshots/review-queue.png)
+
+### Human review workspace
+
+![Human review workspace](docs/screenshots/review-workspace.png)
+
+### Compliance reports
+
+![Compliance reports](docs/screenshots/reports.png)
+
+### Secure login
+
+![Secure login](docs/screenshots/login.png)
+
+## Main workspaces
+
+### Compliance command center
+
+The operations dashboard surfaces:
+
+- active and compliant vendors
+- portfolio compliance rate and average score
+- current and overdue review workload
+- high-risk exposure requiring action
+- vendor lifecycle distribution
+- category concentration
+- priority remediation vendors
+- upcoming evidence expiry
+- recent reviewer activity
+
+### Vendor portfolio
+
+Compliance teams can search and filter vendors by lifecycle, category, risk, and score band. Each vendor record includes contact details, reviewer ownership, required evidence, document history, compliance score, invitation state, and operational actions.
+
+### Review workspace
+
+Reviewers receive a queue ordered by risk and waiting time. Each evidence record exposes private metadata, version information, expiry, decision history, and controlled outcomes. Review comments are stored with the actor and timestamp.
+
+### Vendor portal
+
+Vendor users are restricted to their own organization. They can view required evidence, understand decision feedback, upload replacements, and download authorized versions without receiving public file URLs.
+
+### Reports and auditability
+
+The platform includes reports for compliance summary, missing evidence, expiry, rejected submissions, onboarding, reviewer workload, and audit history. CSV export endpoints support downstream assurance and governance workflows.
+
+## Security design
+
+- Role middleware and model policies enforce access boundaries.
+- Vendor users are restricted by vendor-scoped middleware.
+- Compliance files use a dedicated private storage disk.
+- Files are delivered only through authorized controller actions.
+- Upload requests validate size, extension, MIME type, and ownership.
+- Lifecycle actions and decisions generate audit records.
+- Forms use Laravel CSRF protection.
+- Authentication sessions and passwords use Laravel security primitives.
+- Production containers run PHP-FPM as a non-root application user.
+- Nginx blocks access to hidden, storage, and cache paths.
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Application | Laravel 11, PHP 8.2+ |
+| Interface | Blade, Tailwind CSS, Vite, Axios |
+| Authorization | Laravel middleware, policies, five-role RBAC |
+| Database | SQLite for local setup; MySQL 8.4 in Docker |
+| Documents | Laravel Filesystem private disk; S3-ready driver configuration |
+| Reports | CSV exports, DOMPDF and Laravel Excel dependencies |
+| Background operations | Database queue worker and Laravel scheduler |
+| Infrastructure | Docker Compose, Nginx, PHP-FPM, MySQL |
+| Quality | PHPUnit, Laravel Pint, PHP lint, npm audit, GitHub Actions |
+
+## Project structure
+
+```text
 app/
-├── Console/Commands/        # CheckDocumentExpiry (nightly scheduler)
-├── Enums/                   # RoleName (5 roles with label() + role-set helpers)
-├── Http/
-│   ├── Controllers/
-│   │   ├── Admin/           # DashboardController, VendorController, AdminDocumentController, ReportController
-│   │   ├── Auditor/         # AuditorDashboardController (read-only)
-│   │   ├── Reviewer/        # ReviewQueueController
-│   │   └── VendorPortal/    # VendorDocumentController, AcceptInvitationController
-│   ├── Middleware/          # EnsureUserHasRole, EnsureVendorScopedAccess, RecordLastLogin
-│   └── Requests/            # Per-action form requests with authorization
-├── Mail/                    # DocumentReviewedMail, ExpiryWarningMail
-├── Models/                  # 11 Eloquent models with relationships and domain helpers
-├── Notifications/           # VendorInvitationNotification
-├── Policies/                # VendorPolicy, VendorDocumentPolicy, ReviewPolicy
-└── Services/
-    ├── AuditService.php     # Centralised audit logging (actor/vendor snapshots, IP)
-    ├── ComplianceService.php # Score calculation and 8-status derivation
-    ├── DocumentService.php  # Upload, versioning, private-disk download
-    ├── NotificationService.php # In-app + email notification dispatch
-    ├── ReportService.php    # 7 report types with CSV streaming
-    ├── ReviewService.php    # 5 decision types; triggers compliance recalc
-    └── VendorService.php    # Vendor lifecycle transitions + audit logging
+├── Console/Commands/       # Expiry monitoring
+├── Http/Controllers/       # Admin, reviewer, vendor, auditor, notifications
+├── Http/Middleware/        # RBAC and vendor scoping
+├── Http/Requests/          # Validated onboarding, upload, and review inputs
+├── Models/                 # Vendor, evidence, versions, reviews, checks, logs
+├── Policies/               # Resource authorization
+└── Services/               # Compliance, documents, reviews, reports, audit
 
 database/
-├── factories/               # 6 model factories with state methods
-├── migrations/              # 11 migrations in verified dependency order
-└── seeders/
-    ├── DocumentTypeSeeder.php  # 9 document types + 28 category requirements
-    └── DemoSeeder.php          # 5 demo vendors + 9 user accounts
+├── factories/
+├── migrations/
+└── seeders/                # Document catalogue and controlled portfolio data
 
-tests/Feature/
-├── Auth/                    # AuthenticationTest (20 tests)
-├── Compliance/              # ComplianceEngineTest (20 tests)
-├── Dashboard/               # DashboardAndReportsTest (18 tests)
-├── Document/                # DocumentUploadTest (18 tests)
-├── Review/                  # ReviewWorkflowTest (18 tests)
-├── Schema/                  # MigrationSchemaTest (12 tests)
-└── Vendor/                  # VendorManagementTest (23 tests)
+resources/
+├── css/app.css             # VendorGuard design system
+├── js/app.js               # Responsive navigation and interactions
+└── views/                  # Role-aware operational workspaces
+
+docs/screenshots/           # Portfolio screenshots
+.github/workflows/ci.yml    # Automated verification
 ```
 
----
+## Windows quick start
 
-## Quick Start (Docker)
+### Prerequisites
+
+Install and add to PATH:
+
+- PHP 8.2 or newer
+- Composer 2 or newer
+- Node.js 20 or newer
+
+### First-time setup
+
+Double-click:
+
+```text
+setup_windows.bat
+```
+
+The script creates a local SQLite environment, installs dependencies, generates the application key, migrates the database, and builds frontend assets.
+
+Load the controlled portfolio dataset:
+
+```text
+seed_demo.bat
+```
+
+Start Laravel:
+
+```text
+start_laravel.bat
+```
+
+Start Vite in another terminal:
+
+```text
+start_vite.bat
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Manual local setup
 
 ```bash
-# 1. Clone and enter the project
 git clone https://github.com/SAHARIARSHOWMIK/vendor-compliance-portal.git
 cd vendor-compliance-portal
 
-# 2. Copy and configure environment
-cp .env.example .env
-# Edit .env — set APP_KEY (or let step 4 generate it)
-
-# 3. Start the containers
-docker compose up -d --build
-
-# 4. First-time setup (run once)
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
-
-# 5. Open the app
-open http://localhost:8080
-```
-
-The app will be available at **http://localhost:8080**.
-
----
-
-## Demo Credentials
-
-All demo accounts use the password **`password`**.
-
-| Role | Email | Access |
-|------|-------|--------|
-| Super Admin | `super.admin@demo.test` | Full system access |
-| Compliance Admin | `compliance.admin@demo.test` | Vendor management + reports |
-| Reviewer | `reviewer@demo.test` | Document review queue |
-| Auditor | `auditor@demo.test` | Read-only vendor + audit log |
-| Vendor (Alpha) | `vendor.alpha@demo.test` | Fully compliant vendor |
-| Vendor (CyberNet) | `vendor.cybernet@demo.test` | NDA missing, docs under review |
-| Vendor (BuildPro) | `vendor.buildpro@demo.test` | Insurance expiring in 7 days |
-| Vendor (Noor) | `vendor.noor@demo.test` | Bank document rejected |
-| Vendor (SecureGate) | `vendor.securegate@demo.test` | Multiple docs under review |
-
----
-
-## Local Development (without Docker)
-
-```bash
-# PHP 8.3 + Composer + Node 20 required
+cp .env.sqlite.example .env
 composer install
-npm ci && npm run build
-cp .env.example .env
+npm install
+
 php artisan key:generate
-# Configure DB_* in .env, then:
-php artisan migrate --seed
+mkdir -p database
+touch database/database.sqlite
+php artisan migrate
+php artisan db:seed --class=DemoSeeder
+
+npm run build
 php artisan serve
 ```
 
----
+For asset hot reloading, run `npm run dev` in another terminal.
 
-## Testing
+## Demo accounts
+
+All seeded accounts use the password `password`.
+
+| Role | Email |
+|---|---|
+| Super Administrator | `super.admin@demo.test` |
+| Compliance Administrator | `compliance.admin@demo.test` |
+| Reviewer | `reviewer@demo.test` |
+| Auditor | `auditor@demo.test` |
+| Alpha Office Supplies | `vendor.alpha@demo.test` |
+| CyberNet Solutions | `vendor.cybernet@demo.test` |
+| BuildPro Contractors | `vendor.buildpro@demo.test` |
+| Noor Consulting | `vendor.noor@demo.test` |
+| SecureGate Systems | `vendor.securegate@demo.test` |
+
+The seed data demonstrates compliant, missing-document, under-review, correction-required, rejected, high-risk, and expiring-evidence scenarios.
+
+## Testing and quality checks
 
 ```bash
-# Run full test suite (129 tests across 7 test classes)
 php artisan test
-
-# Parallel (faster)
-php artisan test --parallel
-
-# Specific group
-php artisan test tests/Feature/Compliance/
-php artisan test tests/Feature/Review/
-
-# Dry-run the expiry check command
-php artisan compliance:check-expiry --dry-run
+npm run build
+npm audit --audit-level=high
 ```
 
-All tests use `RefreshDatabase` + `Storage::fake('vendor_documents')` + `Mail::fake()`. No external services required.
+On Windows:
 
----
-
-## Key Design Decisions
-
-**Private file storage** — `vendor_documents` disk maps to `storage/app/private/vendor-documents`. Files are never served via public URLs; always streamed through `DocumentService::streamDownload()` after an auth + policy check.
-
-**Version history is immutable** — reuploading a document snapshots the existing row into `document_versions` before updating `vendor_documents`. Old files are never deleted from disk.
-
-**Compliance engine is deterministic** — no AI, no external APIs. The score formula is `(approved/required)*100 - (expired/required)*40 - (rejected/required)*20 - (expiring/required)*10`, capped at [0, 100].
-
-**Suspended vendors are never auto-reinstated** — `ComplianceService::deriveVendorStatus()` guards against the compliance engine promoting a manually-suspended vendor back to active, even if all their documents are approved.
-
-**Audit log is append-only** — `AuditLog` uses `$guarded = ['id']` (no mass-assignment restriction) but has no `update` or `delete` calls anywhere in the codebase. Actor name and vendor name are snapshotted at write time so audit entries survive user/vendor deletion.
-
-**Delete route intentionally excluded** — `Route::resource('vendors', VendorController::class)->except(['destroy'])`. Vendors are archived, not deleted, to preserve the audit trail.
-
----
-
-## Compliance Score Formula
-
-```
-score = (approved / required) × 100
-      − (expired  / required) × 40   ← heaviest penalty
-      − (rejected / required) × 20
-      − (expiring / required) × 10
-      (clamped to 0–100, rounded to nearest integer)
+```text
+run_tests.bat
 ```
 
-| Scenario | Score |
-|----------|-------|
-| All 4 docs approved | 100% |
-| 3/4 approved, 1 rejected | 70% |
-| 3/4 approved, 1 expired | 65% |
-| 2/4 approved, 2 missing | 50% |
-| All docs missing | 0% |
+GitHub Actions performs dependency installation, SQLite environment preparation, PHP syntax validation, Laravel tests, a production frontend build, and a high-severity npm audit.
 
----
+## Docker deployment
 
-## Nightly Expiry Check
+Create `.env` from `.env.example`, then set a valid application key:
 
 ```bash
-# Check what would change without making any DB writes
-php artisan compliance:check-expiry --dry-run
+cp .env.example .env
+docker compose run --rm app php artisan key:generate --show
+```
 
-# Run live (also triggered daily at 08:00 by the scheduler)
+Copy the generated value into `APP_KEY`, then run:
+
+```bash
+docker compose build
+docker compose up -d
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan db:seed --class=DemoSeeder --force
+```
+
+Open `http://localhost:8080`.
+
+The Compose stack includes:
+
+- Nginx web server
+- PHP-FPM application
+- MySQL 8.4 database
+- queue worker
+- Laravel scheduler
+- persistent private-document and log volumes
+
+## Configuration highlights
+
+Important environment variables:
+
+```dotenv
+DOCUMENT_MAX_UPLOAD_SIZE_KB=10240
+COMPLIANCE_EXPIRY_EARLY_WARNING_DAYS=60
+COMPLIANCE_EXPIRY_REMINDER_DAYS=30
+COMPLIANCE_EXPIRY_URGENT_DAYS=7
+VENDOR_DOCUMENTS_DISK_DRIVER=local
+```
+
+To move private evidence to object storage, configure the dedicated disk for S3 and provide the required AWS variables. Application upload and download code continues to use the same `vendor_documents` disk abstraction.
+
+## Automated expiry monitoring
+
+The scheduler runs the compliance expiry command defined in `routes/console.php`. It identifies approaching or elapsed expiry dates, updates evidence and vendor states, and generates operational notifications.
+
+Run manually:
+
+```bash
 php artisan compliance:check-expiry
 ```
 
-Thresholds (configurable in `.env`):
+## Repository safeguards
 
-| Variable | Default | Effect |
-|----------|---------|--------|
-| `COMPLIANCE_EXPIRY_EARLY_WARNING_DAYS` | 60 | First in-app + email notification |
-| `COMPLIANCE_EXPIRY_REMINDER_DAYS` | 30 | Second notification |
-| `COMPLIANCE_EXPIRY_URGENT_DAYS` | 7 | Urgent notification, badge turns red |
+The repository intentionally excludes:
 
----
+- `.env`
+- private uploaded evidence
+- SQLite database files
+- Composer `vendor/`
+- `node_modules/`
+- compiled build output
+- logs and caches
 
-## Stack
+Only controlled sample records belong in public demonstrations.
 
-| Layer | Choice | Reason |
-|-------|--------|--------|
-| Backend | Laravel 11 / PHP 8.3 | Rich ecosystem, first-class auth/policy/queue |
-| Frontend | Blade + Tailwind CSS | Avoids JS build complexity; Tailwind for rapid utility styling |
-| Database | MySQL 8 | JSON columns for audit log, window function support |
-| File storage | Local private disk | No S3 credentials needed to demo; swap by changing `FILESYSTEM_DISK` |
-| Testing | PHPUnit via `php artisan test` | RefreshDatabase + Storage::fake + Mail::fake |
-| CI | GitHub Actions | Free tier; matrix for multiple PHP versions |
-| Containerisation | Docker Compose (PHP-FPM + Nginx + MySQL) | One-command local start |
+## Current boundaries
 
----
+- Real SMTP, S3, identity-provider, and enterprise SSO integrations require deployment credentials.
+- The included roles are organization-wide; multi-tenant organization isolation can be added for a SaaS deployment.
+- CSV export is implemented; PDF/Excel dependencies are present for expanded formatted reports.
+- Screenshots use controlled sample records and contain no private vendor data.
 
-## Resume Bullets
+## Resume highlights
 
-- Architected a **Laravel 11 vendor compliance portal** with 5-role RBAC, 12-status vendor lifecycle, 10-status document lifecycle, and a deterministic compliance scoring engine; **129 feature tests** with 0 failures
-- Built a **private-disk document management system** enforcing file versioning (reupload snapshots previous versions), authenticated download (no public URLs), and per-document-type MIME/size validation
-- Designed an **append-only audit trail** with actor/vendor snapshots surviving record deletion, accessible to Auditor role via a read-only portal and filterable CSV export
-- Implemented a **nightly Artisan expiry-monitoring command** with `--dry-run` support, three configurable notification thresholds, and automatic compliance score recalculation
-- Packaged with **Docker Compose** (PHP-FPM + Nginx + MySQL), **GitHub Actions CI**, and a seeder providing 5 demo vendors covering all compliance scenarios
+**Vendor Compliance & Document Approval Portal**  
+*Laravel, PHP, MySQL/SQLite, Tailwind CSS, RBAC, Docker*
 
----
+- Built a full-stack Laravel portal for vendor onboarding, category-specific evidence checklists, private file uploads, version history, risk-prioritized review queues, and approval or correction workflows.
+- Developed a compliance engine that tracks missing, rejected, under-review, expired, and expiring evidence; recalculates vendor scores; and generates operational notifications, reports, and audit records.
+- Implemented five-role access control, vendor-scoped authorization, scheduled expiry monitoring, queue workers, CSV exports, Docker deployment, and automated CI verification.
 
 ## License
 
-MIT
+Released under the [MIT License](LICENSE).

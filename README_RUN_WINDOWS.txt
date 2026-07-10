@@ -1,18 +1,19 @@
-Vendor Compliance Portal - Windows Run Notes
+VENDORGUARD - WINDOWS QUICK START
+================================
 
-Option A: Local PHP setup
-1. Install PHP 8.2 or newer.
-2. Install Composer.
-3. Install Node.js LTS.
-4. Double-click setup_windows.bat.
-5. Start two terminals:
-   - start_laravel.bat
-   - start_vite.bat
-6. Open http://127.0.0.1:8000
+Requirements:
+- PHP 8.2+
+- Composer 2+
+- Node.js 20+
 
-Option B: Docker
-1. Install Docker Desktop.
-2. Run: docker compose up --build
-3. Follow the README Docker section.
+1. Double-click setup_windows.bat once.
+2. Double-click seed_demo.bat to load the portfolio dataset.
+3. Double-click start_laravel.bat.
+4. In another window, double-click start_vite.bat.
+5. Open http://127.0.0.1:8000
 
-Never commit .env, vendor/, node_modules/, or local database/storage files.
+Demo administrator:
+Email: super.admin@demo.test
+Password: password
+
+Other role accounts are listed in README.md.

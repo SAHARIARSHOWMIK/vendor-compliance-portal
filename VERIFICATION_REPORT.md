@@ -1,26 +1,27 @@
 # Verification Report
 
-Prepared for GitHub portfolio upload.
+## Completed checks
 
-## Checks completed
+| Check | Result |
+|---|---|
+| PHP syntax lint | Passed across 84 PHP files in `app`, `config`, `database`, `routes`, and `tests` |
+| Frontend JavaScript syntax | Passed |
+| Tailwind/Vite production build | Passed with Vite 8.1.4 |
+| npm security audit | Passed with 0 vulnerabilities |
+| GitHub Actions YAML parsing | Passed |
+| Docker Compose YAML parsing | Passed |
+| Portfolio screenshot rendering | Passed; 6 controlled UI screenshots included |
+| Forbidden local-artifact scan | Passed before packaging |
+| Local SQLite/Windows setup review | Passed |
 
-- Project structure inspected.
-- Laravel source tree verified: app, routes, resources, database migrations, seeders, factories, tests, Docker files.
-- PHP syntax lint completed across app, config, bootstrap, database, routes, and tests.
-- Result: PHP syntax check passed.
-- GitHub Actions workflow reviewed and rewritten to be GitHub-friendly.
-- README repository links updated to `SAHARIARSHOWMIK/vendor-compliance-portal`.
-- `.gitattributes` added to avoid Windows/GitHub newline issues.
-- `.dockerignore` added.
-- Windows helper scripts added.
-- Private/local files are excluded by `.gitignore`: `.env`, `vendor/`, `node_modules/`, storage keys, PHPUnit cache, IDE files.
+The production frontend build generated a 61.47 kB CSS bundle and a 1.26 kB JavaScript bundle before generated output was removed from the source package.
 
-## Important note
+## Runtime-test limitation
 
-The sandbox environment did not include Composer, so the full Laravel test suite was not executed here. The project includes a GitHub Actions CI workflow that installs Composer/npm dependencies and runs `php artisan test` on GitHub after upload.
+Composer was not installed in the verification sandbox, and outbound dependency download access was unavailable. The full Laravel bootstrap and PHPUnit suite therefore could not be executed locally. This is reported explicitly rather than represented as a passing runtime test.
 
-## Recommended GitHub repository
+The included GitHub Actions workflow installs Composer dependencies, prepares SQLite, runs PHP syntax validation, executes `php artisan test`, builds frontend assets, and runs a high-severity npm audit after the update is pushed.
 
-```text
-vendor-compliance-portal
-```
+## Docker limitation
+
+Docker was not available in the verification environment. Dockerfiles and Compose YAML were structurally inspected and parsed, but images were not built locally. The deployment stack includes Nginx, PHP-FPM, MySQL, a queue worker, and a scheduler.

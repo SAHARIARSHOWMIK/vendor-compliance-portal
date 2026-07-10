@@ -1,58 +1,47 @@
-version: '3.9'
-
 services:
-  # ---------------------------------------------------------------
-  # PHP-FPM application server
-  # ---------------------------------------------------------------
   app:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    container_name: vcp_app
     restart: unless-stopped
-    working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
-      - ./storage:/var/www/html/storage
-    environment:
-      APP_ENV: local
+    environment: &app-environment
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost:8080}
       APP_KEY: ${APP_KEY}
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
       DB_DATABASE: ${DB_DATABASE:-vendor_compliance}
       DB_USERNAME: ${DB_USERNAME:-vcpuser}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
       MAIL_MAILER: log
-      FILESYSTEM_DISK: vendor_documents
+      FILESYSTEM_DISK: local
+      VENDOR_DOCUMENTS_DISK_DRIVER: local
+    volumes:
+      - vendor_documents:/var/www/html/storage/app/private/vendor-documents
+      - app_logs:/var/www/html/storage/logs
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - vcp_network
+    networks: [vendor_network]
 
-  # ---------------------------------------------------------------
-  # Nginx web server
-  # ---------------------------------------------------------------
   nginx:
-    image: nginx:1.25-alpine
-    container_name: vcp_nginx
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:80"
-    volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - app
-    networks:
-      - vcp_network
+    depends_on: [app]
+    networks: [vendor_network]
 
-  # ---------------------------------------------------------------
-  # MySQL 8 database
-  # ---------------------------------------------------------------
   db:
-    image: mysql:8.0
-    container_name: vcp_db
+    image: mysql:8.4
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-vendor_compliance}
@@ -62,46 +51,48 @@ services:
     ports:
       - "${DB_EXPOSE_PORT:-33060}:3306"
     volumes:
-      - vcp_db_data:/var/lib/mysql
+      - vendor_db:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
       interval: 10s
       timeout: 5s
-      retries: 5
-    networks:
-      - vcp_network
+      retries: 10
+    networks: [vendor_network]
 
-  # ---------------------------------------------------------------
-  # Artisan scheduler (runs every minute via supercronic)
-  # ---------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    restart: unless-stopped
+    environment: *app-environment
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=120
+    volumes:
+      - vendor_documents:/var/www/html/storage/app/private/vendor-documents
+      - app_logs:/var/www/html/storage/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [vendor_network]
+
   scheduler:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    container_name: vcp_scheduler
     restart: unless-stopped
-    working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
-    environment:
-      APP_ENV: local
-      APP_KEY: ${APP_KEY}
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_DATABASE: ${DB_DATABASE:-vendor_compliance}
-      DB_USERNAME: ${DB_USERNAME:-vcpuser}
-      DB_PASSWORD: ${DB_PASSWORD:-secret}
+    environment: *app-environment
     command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    volumes:
+      - vendor_documents:/var/www/html/storage/app/private/vendor-documents
+      - app_logs:/var/www/html/storage/logs
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - vcp_network
+    networks: [vendor_network]
 
 networks:
-  vcp_network:
-    driver: bridge
+  vendor_network:
 
 volumes:
-  vcp_db_data:
-    driver: local
+  vendor_db:
+  vendor_documents:
+  app_logs:

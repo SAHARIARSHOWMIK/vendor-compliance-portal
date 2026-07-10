@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\DocumentType;
+use App\Models\Notification;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorDocument;
@@ -43,6 +44,7 @@ class DemoSeeder extends Seeder
 
         $reviewer = $this->createInternalUsers();
         $this->createDemoVendors($reviewer);
+        $this->createDemoNotifications();
     }
 
     // -----------------------------------------------------------------
@@ -192,6 +194,66 @@ class DemoSeeder extends Seeder
         // Several documents under review
         foreach (['tax_certificate', 'bank_verification', 'business_license', 'insurance_certificate', 'cybersecurity_declaration', 'contract', 'safety_certificate'] as $slug) {
             $this->createDocument($securegate, $slug, 'under_review');
+        }
+    }
+
+
+    private function createDemoNotifications(): void
+    {
+        $admin = User::where('email', 'compliance.admin@demo.test')->first();
+        $reviewer = User::where('email', 'reviewer@demo.test')->first();
+        $buildPro = Vendor::where('name', 'BuildPro Contractors Sdn Bhd')->first();
+        $cyberNet = Vendor::where('name', 'CyberNet Solutions Sdn Bhd')->first();
+        $noor = Vendor::where('name', 'Noor Consulting')->first();
+
+        if ($admin && $buildPro) {
+            Notification::firstOrCreate(
+                ['user_id' => $admin->id, 'title' => 'Insurance renewal due in 7 days'],
+                [
+                    'message' => 'BuildPro Contractors must replace its insurance certificate before the current evidence expires.',
+                    'type' => 'urgent',
+                    'vendor_id' => $buildPro->id,
+                    'action_url' => route('admin.vendors.show', $buildPro),
+                ],
+            );
+        }
+
+        if ($admin && $cyberNet) {
+            Notification::firstOrCreate(
+                ['user_id' => $admin->id, 'title' => 'High-risk vendor onboarding incomplete'],
+                [
+                    'message' => 'CyberNet Solutions is missing an NDA and has cybersecurity evidence awaiting review.',
+                    'type' => 'action_required',
+                    'vendor_id' => $cyberNet->id,
+                    'action_url' => route('admin.vendors.show', $cyberNet),
+                ],
+            );
+        }
+
+        if ($reviewer && $cyberNet) {
+            $document = $cyberNet->documents()->where('status', 'under_review')->first();
+            Notification::firstOrCreate(
+                ['user_id' => $reviewer->id, 'title' => 'Priority evidence ready for review'],
+                [
+                    'message' => 'CyberNet Solutions submitted high-risk cybersecurity evidence requiring a human decision.',
+                    'type' => 'action_required',
+                    'vendor_id' => $cyberNet->id,
+                    'vendor_document_id' => $document?->id,
+                    'action_url' => $document ? route('reviewer.documents.show', $document) : route('reviewer.queue'),
+                ],
+            );
+        }
+
+        if ($admin && $noor) {
+            Notification::firstOrCreate(
+                ['user_id' => $admin->id, 'title' => 'Correction request remains open'],
+                [
+                    'message' => 'Noor Consulting must reupload a clearer bank verification document.',
+                    'type' => 'warning',
+                    'vendor_id' => $noor->id,
+                    'action_url' => route('admin.vendors.show', $noor),
+                ],
+            );
         }
     }
 

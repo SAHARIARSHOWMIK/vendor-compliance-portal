@@ -19,28 +19,58 @@ class ReviewQueueController extends Controller
     {
         $this->authorize('viewQueue', VendorDocument::class);
 
+        $baseQuery = VendorDocument::query()
+            ->whereIn('vendor_documents.status', ['uploaded', 'reuploaded', 'under_review']);
+
+        $summaryQuery = clone $baseQuery;
+        if ($request->user()->isReviewer() && ! $request->boolean('show_all')) {
+            $summaryQuery->whereHas('vendor', fn ($q) => $q->where('assigned_reviewer_id', $request->user()->id));
+        }
+
+        $queueSummary = [
+            'total' => (clone $summaryQuery)->count(),
+            'high_risk' => (clone $summaryQuery)->whereHas('vendor', fn ($q) => $q->where('risk_level', 'high'))->count(),
+            'overdue' => (clone $summaryQuery)->where('uploaded_at', '<=', now()->subDays(3))->count(),
+            'expiring' => (clone $summaryQuery)->whereNotNull('expiry_date')->where('expiry_date', '<=', now()->addDays(30))->count(),
+        ];
+
         $query = VendorDocument::with(['vendor', 'documentType', 'vendor.assignedReviewer'])
-            ->whereIn('status', ['uploaded', 'reuploaded', 'under_review'])
+            ->whereIn('vendor_documents.status', ['uploaded', 'reuploaded', 'under_review'])
             ->join('vendors', 'vendor_documents.vendor_id', '=', 'vendors.id')
             ->select('vendor_documents.*')
             ->orderByRaw("CASE vendors.risk_level WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END")
-            ->orderByRaw("CASE WHEN vendor_documents.expiry_date IS NOT NULL AND vendor_documents.expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) THEN 0 ELSE 1 END")
-            ->orderBy('vendor_documents.uploaded_at', 'asc');
+            ->orderByRaw('CASE WHEN vendor_documents.expiry_date IS NOT NULL AND vendor_documents.expiry_date <= ? THEN 0 ELSE 1 END', [now()->addDays(30)->toDateString()])
+            ->orderBy('vendor_documents.uploaded_at');
 
+        if ($request->filled('search')) {
+            $term = trim((string) $request->input('search'));
+            $query->where(function ($builder) use ($term): void {
+                $builder->where('vendors.name', 'like', "%{$term}%")
+                    ->orWhere('vendor_documents.original_filename', 'like', "%{$term}%");
+            });
+        }
         if ($request->filled('vendor_id')) {
             $query->where('vendor_documents.vendor_id', $request->vendor_id);
         }
         if ($request->filled('risk_level')) {
             $query->where('vendors.risk_level', $request->risk_level);
         }
+        if ($request->filled('priority')) {
+            if ($request->priority === 'overdue') {
+                $query->where('vendor_documents.uploaded_at', '<=', now()->subDays(3));
+            } elseif ($request->priority === 'expiring') {
+                $query->whereNotNull('vendor_documents.expiry_date')
+                    ->where('vendor_documents.expiry_date', '<=', now()->addDays(30));
+            }
+        }
         if ($request->user()->isReviewer() && ! $request->boolean('show_all')) {
             $query->where('vendors.assigned_reviewer_id', $request->user()->id);
         }
 
         $documents = $query->paginate(25)->withQueryString();
-        $vendors   = Vendor::orderBy('name')->get(['id', 'name']);
+        $vendors = Vendor::orderBy('name')->get(['id', 'name']);
 
-        return view('reviewer.queue', compact('documents', 'vendors'));
+        return view('reviewer.queue', compact('documents', 'vendors', 'queueSummary'));
     }
 
     public function show(VendorDocument $document): View

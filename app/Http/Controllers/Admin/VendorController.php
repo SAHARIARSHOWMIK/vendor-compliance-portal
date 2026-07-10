@@ -30,9 +30,18 @@ class VendorController extends Controller
 
         $query = Vendor::query()
             ->with(['assignedReviewer', 'latestComplianceCheck'])
-            ->orderByRaw("FIELD(status, 'suspended','correction_required','non_compliant','expiring_soon','under_review','documents_pending') DESC")
+            ->orderByRaw("CASE status WHEN 'suspended' THEN 0 WHEN 'correction_required' THEN 1 WHEN 'non_compliant' THEN 2 WHEN 'expiring_soon' THEN 3 WHEN 'under_review' THEN 4 WHEN 'documents_pending' THEN 5 ELSE 6 END")
             ->orderBy('name');
 
+        if ($request->filled('search')) {
+            $term = trim((string) $request->input('search'));
+            $query->where(function ($builder) use ($term): void {
+                $builder->where('name', 'like', "%{$term}%")
+                    ->orWhere('registration_number', 'like', "%{$term}%")
+                    ->orWhere('contact_person', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -48,14 +57,38 @@ class VendorController extends Controller
         if ($request->filled('reviewer')) {
             $query->where('assigned_reviewer_id', $request->reviewer);
         }
+        if ($request->filled('score_band')) {
+            match ($request->score_band) {
+                'critical' => $query->where('compliance_score', '<', 40),
+                'needs_attention' => $query->whereBetween('compliance_score', [40, 74]),
+                'healthy' => $query->whereBetween('compliance_score', [75, 99]),
+                'complete' => $query->where('compliance_score', 100),
+                default => null,
+            };
+        }
         if ($request->boolean('expiring_soon')) {
             $query->where('compliance_status', 'expiring_soon');
         }
 
-        $vendors   = $query->paginate(25)->withQueryString();
-        $reviewers = User::where('role', 'reviewer')->orderBy('name')->get();
+        $sort = $request->input('sort');
+        if ($sort === 'score_asc') {
+            $query->reorder('compliance_score')->orderBy('name');
+        } elseif ($sort === 'score_desc') {
+            $query->reorder('compliance_score', 'desc')->orderBy('name');
+        } elseif ($sort === 'recent') {
+            $query->reorder('updated_at', 'desc');
+        }
 
-        return view('admin.vendors.index', compact('vendors', 'reviewers'));
+        $vendors = $query->paginate(25)->withQueryString();
+        $reviewers = User::where('role', 'reviewer')->orderBy('name')->get();
+        $portfolio = [
+            'total' => Vendor::whereNotIn('status', ['archived'])->count(),
+            'high_risk' => Vendor::where('risk_level', 'high')->whereNotIn('status', ['archived'])->count(),
+            'needs_action' => Vendor::whereIn('compliance_status', ['non_compliant', 'correction_required', 'documents_missing'])->count(),
+            'fully_compliant' => Vendor::where('compliance_status', 'fully_compliant')->count(),
+        ];
+
+        return view('admin.vendors.index', compact('vendors', 'reviewers', 'portfolio'));
     }
 
     // -----------------------------------------------------------------

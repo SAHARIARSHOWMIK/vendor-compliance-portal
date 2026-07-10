@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Auditor\AuditorDashboardController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviewer\ReviewQueueController;
 use App\Http\Controllers\VendorPortal\AcceptInvitationController;
 use App\Http\Controllers\VendorPortal\VendorDocumentController;
@@ -29,6 +30,10 @@ Route::middleware('auth')->group(function () {
 
     // Single entry point after login - redirects by role.
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 
     /*
     |----------------------------------------------------------------
@@ -124,5 +129,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/dashboard',             [AuditorDashboardController::class, 'index'])->name('dashboard');
             Route::get('/vendors',               [AuditorDashboardController::class, 'vendors'])->name('vendors');
             Route::get('/vendors/{vendor}',      [AuditorDashboardController::class, 'vendorDetail'])->name('vendors.show');
+            Route::get('/audit-log', [ReportController::class, 'auditLog'])->name('audit-log');
+            Route::get('/audit-log/export', [ReportController::class, 'exportAuditLog'])->name('audit-log.export');
         });
 });
