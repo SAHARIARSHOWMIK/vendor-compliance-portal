@@ -29,6 +29,10 @@ class DocumentService
 {
     private const DISK = 'vendor_documents';
 
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
     // -----------------------------------------------------------------
     // Upload (initial or replacement)
     // -----------------------------------------------------------------
@@ -88,6 +92,8 @@ class DocumentService
             new_values: ['version' => 1, 'status' => 'uploaded', 'file' => $file->getClientOriginalName()],
         );
 
+        $this->notificationService->notifyReviewersOfUpload($vendorDocument);
+
         return $vendorDocument;
     }
 
@@ -100,6 +106,9 @@ class DocumentService
         ?string $expiryDate,
         ?string $notes,
     ): VendorDocument {
+        $previousVersion = $existing->version_number;
+        $previousStatus = $existing->status;
+
         // Snapshot the current row into document_versions BEFORE updating.
         // This is the "old version remains in history" invariant.
         DocumentVersion::create([
@@ -118,7 +127,7 @@ class DocumentService
             'uploaded_at'        => $existing->uploaded_at ?? $existing->created_at,
         ]);
 
-        $newVersion = $existing->version_number + 1;
+        $newVersion = $previousVersion + 1;
         $path = $this->storeFile($vendor, $documentType, $file, $newVersion);
 
         $existing->update([
@@ -139,11 +148,14 @@ class DocumentService
 
         $this->audit($uploader, $vendor, $existing, 'document_reuploaded',
             "Reupload of '{$documentType->name}' (v{$newVersion}) by {$uploader->name}.",
-            old_values: ['version' => $existing->version_number - 1, 'status' => $existing->getOriginal('status')],
+            old_values: ['version' => $previousVersion, 'status' => $previousStatus],
             new_values: ['version' => $newVersion, 'status' => 'reuploaded', 'file' => $file->getClientOriginalName()],
         );
 
-        return $existing->fresh();
+        $freshDocument = $existing->fresh();
+        $this->notificationService->notifyReviewersOfUpload($freshDocument);
+
+        return $freshDocument;
     }
 
     // -----------------------------------------------------------------
@@ -223,7 +235,6 @@ class DocumentService
         // Path: {vendor_id}/{document_type_slug}/v{version}_{original_name}
         // Prefixing with vendor_id scopes the directory to the vendor, so
         // even if a document type slug is guessed it can't cross vendors.
-        $extension = $file->getClientOriginalExtension();
         $safeName  = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
         $filename  = "v{$version}_{$safeName}";
         $directory = "{$vendor->id}/{$documentType->slug}";

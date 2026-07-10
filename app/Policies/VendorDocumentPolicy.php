@@ -49,7 +49,7 @@ class VendorDocumentPolicy
                 && $vendor->canUploadDocuments();
         }
 
-        return $user->hasAnyRole([RoleName::SuperAdmin, RoleName::ComplianceAdmin, RoleName::Reviewer]);
+        return $user->hasAnyRole([RoleName::SuperAdmin, RoleName::ComplianceAdmin]);
     }
 
     /**

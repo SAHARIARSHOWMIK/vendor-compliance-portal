@@ -45,7 +45,7 @@ class VendorDocumentController extends Controller
     {
         $vendor = $request->user()->vendor();
 
-        $this->authorize('upload', [VendorDocument::class, $vendor]);
+        abort_unless($vendor, 403, 'No vendor account is linked to this user.');
 
         $documentTypes   = DocumentType::where('is_active', true)->orderBy('sort_order')->get();
         $preselectedType = $request->filled('type_id')
@@ -60,6 +60,12 @@ class VendorDocumentController extends Controller
                 ->first()
             : null;
 
+        if ($existingDocument) {
+            $this->authorize('replace', $existingDocument);
+        } else {
+            $this->authorize('upload', [VendorDocument::class, $vendor]);
+        }
+
         return view('vendor-portal.upload', compact(
             'vendor', 'documentTypes', 'preselectedType', 'existingDocument'
         ));
@@ -71,8 +77,8 @@ class VendorDocumentController extends Controller
      */
     public function store(UploadDocumentRequest $request, Vendor $vendor): RedirectResponse
     {
-        $this->authorize('upload', [VendorDocument::class, $vendor]);
-
+        // UploadDocumentRequest performs the context-aware authorization:
+        // initial uploads use the upload ability; replacements use replace.
         $documentType = DocumentType::findOrFail($request->document_type_id);
 
         $this->documentService->upload(

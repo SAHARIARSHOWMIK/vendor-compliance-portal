@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Mail;
 /**
  * In-app and email notification service.
  *
- * Every method creates Notification rows (in-app bell) AND dispatches
- * a Mailable. In demo/test mode MAIL_MAILER=log so emails go to
- * storage/logs/laravel.log rather than actually being sent.
+ * All workflows create in-app Notification rows. Review decisions and
+ * expiry warnings also dispatch email. In demo mode MAIL_MAILER=log writes
+ * email output to storage/logs/laravel.log instead of sending externally.
  */
 class NotificationService
 {

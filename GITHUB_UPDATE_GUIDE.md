@@ -1,35 +1,43 @@
 # Update the existing GitHub repository
 
-This upgraded package is designed to replace the working tree in the existing repository while preserving commit history.
+This repaired package replaces the working tree in the existing repository while preserving its Git history.
 
-## 1. Clone the existing repository
+## 1. Extract this package
+
+Extract the ZIP into Downloads. The source folder should be:
+
+```text
+C:\Users\showmik\Downloads\vendor-compliance-portal-repaired-final
+```
+
+## 2. Clone the existing repository
 
 ```powershell
 cd "C:\Users\showmik\Downloads"
-git clone https://github.com/SAHARIARSHOWMIK/vendor-compliance-portal.git vendor-compliance-portal-repo-update
+git clone https://github.com/SAHARIARSHOWMIK/vendor-compliance-portal.git vendor-compliance-portal-final-update
 ```
 
-## 2. Mirror the upgraded files into the clone
+## 3. Mirror the repaired files into the clone
 
 ```powershell
-$source = "C:\Users\showmik\Downloads\vendor-compliance-portal-upgraded-final"
-$target = "C:\Users\showmik\Downloads\vendor-compliance-portal-repo-update"
+$source = "C:\Users\showmik\Downloads\vendor-compliance-portal-repaired-final"
+$target = "C:\Users\showmik\Downloads\vendor-compliance-portal-final-update"
 
-robocopy $source $target /MIR /XD ".git" "vendor" "node_modules" "public\build" ".phpunit.cache" /XF ".env" "*.sqlite" "*.sqlite3"
+robocopy $source $target /MIR /XD ".git" "vendor" "node_modules" "public\build" ".phpunit.cache" /XF ".env" "*.sqlite" "*.sqlite3" "*.db"
 ```
 
 A Robocopy exit code from 0 through 7 normally indicates success.
 
-## 3. Review and commit the complete upgrade
+## 4. Review, commit, and push the complete replacement
 
 ```powershell
-cd "C:\Users\showmik\Downloads\vendor-compliance-portal-repo-update"
+cd "C:\Users\showmik\Downloads\vendor-compliance-portal-final-update"
 git status
 git add -A
-git commit -m "Upgrade vendor compliance platform and operations experience"
+git commit -m "Stabilize vendor compliance platform and CI"
 git push origin main
 ```
 
-## 4. Verify CI
+## 5. Verify the newest CI run
 
-Open the Actions tab and check the newest workflow run. Older workflow runs remain in the repository history and do not need to be removed.
+Open the repository Actions tab and inspect only the workflow triggered by the new commit. Older failed runs remain in history and do not affect the current branch.

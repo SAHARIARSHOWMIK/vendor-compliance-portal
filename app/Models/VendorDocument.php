@@ -113,8 +113,11 @@ class VendorDocument extends Model
             return false;
         }
 
-        return $this->expiry_date->diffInDays(now(), false) <= 0
-            && $this->expiry_date->diffInDays(now()) <= $withinDays;
+        $daysUntilExpiry = $this->daysUntilExpiry();
+
+        return $daysUntilExpiry !== null
+            && $daysUntilExpiry >= 0
+            && $daysUntilExpiry <= $withinDays;
     }
 
     /**

@@ -8,7 +8,7 @@ use App\Models\Vendor;
 
 /**
  * Gate::authorize('update', $vendor) and @can('update', $vendor) in
- * Blade/Livewire both delegate here. This is the second authorization
+ * Blade templates and controllers both delegate here. This is the second authorization
  * layer (middleware is the first) that enforces finer distinctions than
  * "which role can see this route" - e.g. a Reviewer can *view* any
  * vendor but can only *make review decisions* on assigned ones.

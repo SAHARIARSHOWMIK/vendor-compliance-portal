@@ -37,7 +37,22 @@ Route::middleware('auth')->group(function () {
 
     /*
     |----------------------------------------------------------------
-    | Admin routes - Super Admin + Compliance Admin
+    | Vendor portfolio - read access for admins and auditors
+    |----------------------------------------------------------------
+    */
+    Route::middleware('role:super_admin,compliance_admin,auditor')
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
+            Route::get('/vendors/{vendor}', [VendorController::class, 'show'])
+                ->whereNumber('vendor')
+                ->name('vendors.show');
+        });
+
+    /*
+    |----------------------------------------------------------------
+    | Administrative vendor operations - write access only
     |----------------------------------------------------------------
     */
     Route::middleware('role:super_admin,compliance_admin')
@@ -46,19 +61,37 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-            // Vendor resource routes
-            Route::resource('vendors', VendorController::class)->except(['destroy']);
+            Route::get('/vendors/create', [VendorController::class, 'create'])->name('vendors.create');
+            Route::post('/vendors', [VendorController::class, 'store'])->name('vendors.store');
+            Route::get('/vendors/{vendor}/edit', [VendorController::class, 'edit'])
+                ->whereNumber('vendor')
+                ->name('vendors.edit');
+            Route::match(['put', 'patch'], '/vendors/{vendor}', [VendorController::class, 'update'])
+                ->whereNumber('vendor')
+                ->name('vendors.update');
 
-            // Lifecycle actions
-            Route::post('/vendors/{vendor}/invite',          [VendorController::class, 'invite'])->name('vendors.invite');
-            Route::get('/vendors/{vendor}/invite',           [VendorController::class, 'inviteForm'])->name('vendors.invite-form');
-            Route::post('/vendors/{vendor}/suspend',         [VendorController::class, 'suspend'])->name('vendors.suspend');
-            Route::post('/vendors/{vendor}/reinstate',       [VendorController::class, 'reinstate'])->name('vendors.reinstate');
-            Route::post('/vendors/{vendor}/archive',         [VendorController::class, 'archive'])->name('vendors.archive');
-            Route::post('/vendors/{vendor}/assign-reviewer', [VendorController::class, 'assignReviewer'])->name('vendors.assign-reviewer');
+            Route::post('/vendors/{vendor}/invite', [VendorController::class, 'invite'])
+                ->whereNumber('vendor')
+                ->name('vendors.invite');
+            Route::get('/vendors/{vendor}/invite', [VendorController::class, 'inviteForm'])
+                ->whereNumber('vendor')
+                ->name('vendors.invite-form');
+            Route::post('/vendors/{vendor}/suspend', [VendorController::class, 'suspend'])
+                ->whereNumber('vendor')
+                ->name('vendors.suspend');
+            Route::post('/vendors/{vendor}/reinstate', [VendorController::class, 'reinstate'])
+                ->whereNumber('vendor')
+                ->name('vendors.reinstate');
+            Route::post('/vendors/{vendor}/archive', [VendorController::class, 'archive'])
+                ->whereNumber('vendor')
+                ->name('vendors.archive');
+            Route::post('/vendors/{vendor}/assign-reviewer', [VendorController::class, 'assignReviewer'])
+                ->whereNumber('vendor')
+                ->name('vendors.assign-reviewer');
 
-            // Admin can upload documents on behalf of a vendor
-            Route::post('/vendors/{vendor}/documents/upload', [AdminDocumentController::class, 'store'])->name('vendors.documents.store');
+            Route::post('/vendors/{vendor}/documents/upload', [AdminDocumentController::class, 'store'])
+                ->whereNumber('vendor')
+                ->name('vendors.documents.store');
         });
 
     /*

@@ -3,16 +3,35 @@
 namespace App\Http\Requests\Document;
 
 use App\Models\DocumentType;
+use App\Models\Vendor;
 use App\Models\VendorDocument;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UploadDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        $user = $this->user();
         $vendor = $this->route('vendor');
-        return $this->user()->can('upload', [VendorDocument::class, $vendor]);
+
+        if (! $user || ! $vendor instanceof Vendor) {
+            return false;
+        }
+
+        $documentTypeId = $this->integer('document_type_id');
+
+        if ($documentTypeId > 0) {
+            $existing = VendorDocument::query()
+                ->where('vendor_id', $vendor->id)
+                ->where('document_type_id', $documentTypeId)
+                ->first();
+
+            if ($existing) {
+                return $user->can('replace', $existing);
+            }
+        }
+
+        return $user->can('upload', [VendorDocument::class, $vendor]);
     }
 
     public function rules(): array
@@ -29,7 +48,7 @@ class UploadDocumentRequest extends FormRequest
                 'required',
                 'file',
                 "max:{$maxKb}",
-                Rule::when(! empty($allowedExts), ['mimes:' . implode(',', $allowedExts)]),
+                ...(! empty($allowedExts) ? ['mimes:' . implode(',', $allowedExts)] : []),
             ],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];

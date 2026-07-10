@@ -136,7 +136,7 @@ The platform includes reports for compliance summary, missing evidence, expiry, 
 | Authorization | Laravel middleware, policies, five-role RBAC |
 | Database | SQLite for local setup; MySQL 8.4 in Docker |
 | Documents | Laravel Filesystem private disk; S3-ready driver configuration |
-| Reports | CSV exports, DOMPDF and Laravel Excel dependencies |
+| Reports | Native streamed CSV exports with immutable export audit events |
 | Background operations | Database queue worker and Laravel scheduler |
 | Infrastructure | Docker Compose, Nginx, PHP-FPM, MySQL |
 | Quality | PHPUnit, Laravel Pint, PHP lint, npm audit, GitHub Actions |

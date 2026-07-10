@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Document\UploadDocumentRequest;
 use App\Models\DocumentType;
+use App\Models\VendorDocument;
 use App\Models\Vendor;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,7 @@ class AdminDocumentController extends Controller
 
     public function store(UploadDocumentRequest $request, Vendor $vendor): RedirectResponse
     {
-        $this->authorize('upload', [$vendor]);
+        $this->authorize('upload', [VendorDocument::class, $vendor]);
 
         $documentType = DocumentType::findOrFail($request->document_type_id);
 

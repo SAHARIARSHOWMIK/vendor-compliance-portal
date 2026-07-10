@@ -64,6 +64,9 @@ jobs:
       - name: Clear Laravel caches
         run: php artisan optimize:clear
 
+      - name: Validate application routes
+        run: php artisan route:list --except-vendor
+
       - name: PHP syntax check
         run: find app config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
@@ -72,7 +75,7 @@ jobs:
           APP_ENV: testing
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
-        run: php artisan test --stop-on-failure
+        run: php artisan test
 
       - name: Build frontend assets
         run: npm run build

@@ -37,6 +37,7 @@ class VendorService
             'address'             => $data['address'] ?? null,
             'country'             => $data['country'] ?? null,
             'internal_notes'      => $data['internal_notes'] ?? null,
+            'assigned_reviewer_id' => $data['assigned_reviewer_id'] ?? null,
             'status'              => 'draft',
             'compliance_score'    => 0,
         ]);

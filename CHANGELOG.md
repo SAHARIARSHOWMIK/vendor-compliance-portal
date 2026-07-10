@@ -1,5 +1,16 @@
 # Changelog
 
+## Consolidated stability and CI repair
+
+- Upgraded the framework requirement to Laravel 12 and removed unused PHP packages that blocked secure dependency resolution.
+- Repaired route/controller bindings, authorization traits, policy abilities, auditor report access, and vendor-scoped upload rules.
+- Added context-aware authorization for initial uploads versus document replacements.
+- Corrected file/expiry validation, private storage behavior, version-history auditing, and reviewer notifications.
+- Normalized Composer and npm metadata, removed private registry URLs, and hardened the GitHub Actions workflow.
+- Repaired PHPUnit environment configuration, unit-test discovery, branding assertions, vendor-portal redirects, and Blade component syntax.
+- Removed stale Livewire references after simplifying the frontend dependency graph.
+- Added source-level route, authorization, Blade, package-registry, and artifact checks before packaging.
+
 ## Portfolio platform upgrade
 
 ### Interface

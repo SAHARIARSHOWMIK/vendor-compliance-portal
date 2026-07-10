@@ -7,7 +7,6 @@
     <meta name="description" content="Enterprise vendor onboarding, compliance document review, expiry monitoring, reporting, and audit management.">
     <title>{{ $title ?? config('app.name') }} · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
 </head>
 <body>
 <div class="app-shell">
@@ -155,6 +154,5 @@
         <main>{{ $slot }}</main>
     @endauth
 </div>
-@livewireScripts
 </body>
 </html>

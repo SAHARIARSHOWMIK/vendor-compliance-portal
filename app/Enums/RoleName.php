@@ -6,8 +6,7 @@ namespace App\Enums;
  * The five system roles from the spec, each with a fixed permission set
  * enforced primarily through Policies (app/Policies) and the
  * EnsureUserHasRole middleware, not just route-level checks - so
- * authorization holds even if a route is hit directly or a Livewire
- * component action is invoked out of band.
+ * authorization holds even if a route is hit directly or a controller action is invoked directly.
  */
 enum RoleName: string
 {

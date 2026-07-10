@@ -3,7 +3,6 @@ export default {
     content: [
         './resources/**/*.blade.php',
         './resources/**/*.js',
-        './app/Livewire/**/*.php',
     ],
     safelist: [
         'bg-emerald-50','text-emerald-700',
