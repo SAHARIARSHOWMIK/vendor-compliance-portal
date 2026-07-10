@@ -248,7 +248,7 @@ class DocumentUploadTest extends TestCase
                 // no expiry_date — should be fine for this doc type
             ]);
 
-        $response->assertSessionMissingErrors('expiry_date');
+        $response->assertSessionDoesntHaveErrors(['expiry_date']);
         $this->assertDatabaseHas('vendor_documents', [
             'vendor_id'        => $vendor->id,
             'document_type_id' => $docType->id,
