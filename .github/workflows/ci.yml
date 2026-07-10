@@ -59,7 +59,7 @@ jobs:
         run: composer audit
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --registry=https://registry.npmjs.org/ --no-fund
 
       - name: Clear Laravel caches
         run: php artisan optimize:clear
