@@ -289,9 +289,9 @@ class VendorManagementTest extends TestCase
         $vendor = Vendor::factory()->create();
 
         // destroy route is explicitly excluded via ->except(['destroy']),
-        // so DELETE returns 404 (no route exists), not 405.
+        // The URI exists for other methods, so DELETE returns 405 Method Not Allowed.
         $response = $this->actingAs($admin)->delete(route('admin.vendors.index') . '/' . $vendor->id);
-        $response->assertStatus(404);
+        $response->assertStatus(405);
     }
 
     // -----------------------------------------------------------------
